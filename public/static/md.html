@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Swagger API doc</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/editormd.preview.css" />
+  <link rel="shortcut icon" href="https://pandao.github.io/editor.md/favicon.ico" type="image/x-icon" />
+  <style>
+    body {
+      padding: 40px;
+    }
+
+    #layout>header,
+    .btns {
+      width: auto;
+    }
+
+    #sidebar {
+      width: 400px;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      background: #fff;
+      z-index: 100;
+      padding: 18px;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-bottom: none;
+    }
+
+    #sidebar:hover {
+      overflow: auto;
+    }
+
+    #sidebar h1 {
+      font-size: 16px;
+    }
+
+    #custom-toc-container {
+      padding-left: 0;
+    }
+
+    #doc-editormd-view {
+      padding-left: 430px;
+      padding-right: 0;
+      margin: 0;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="layout">
+    <div id="sidebar">
+      <h1>目录</h1>
+      <div class="markdown-body editormd-preview-container" id="custom-toc-container"></div>
+    </div>
+
+    <div id="doc-editormd-view"></div>
+  </div>
+  <script src="../lib/jquery.min.js"></script>
+  <script src="../lib/marked.min.js"></script>
+  <script src="../lib/prettify.min.js"></script>
+
+  <script src="../lib/raphael.min.js"></script>
+  <script src="../lib/underscore.min.js"></script>
+  <script src="../lib/sequence-diagram.min.js"></script>
+  <script src="../lib/flowchart.min.js"></script>
+  <script src="../lib/jquery.flowchart.min.js"></script>
+  <script src="../lib/editormd.js"></script>
+  <script src="../lib/md5.js"></script>
+  <script type="text/javascript">
+    window.parent.console.log('hah');
+    window.onload = fill('# Hello World!\n');
+    function fill(markdown) {
+      var hd = document.getElementById('doc-editormd-view')
+      if (hd !== null && hd !== undefined) {
+        hd.remove();
+      }
+      $("#layout").append("<div id=\"doc-editormd-view\"></div>");
+      docEditormdView = editormd.markdownToHTML(
+        "doc-editormd-view", {
+        markdown: markdown,
+        htmlDecode: "style,script,iframe",
+        toc: true,
+        tocm: false,
+        tocContainer: "#custom-toc-container",
+        emoji: true,
+        taskList: true,
+        tex: true,
+        flowChart: true,
+        sequenceDiagram: true,
+        theme: "dark"
+      });
+    }
+
+  </script>
+</body>
+
+</html>

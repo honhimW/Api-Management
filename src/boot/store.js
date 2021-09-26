@@ -1,0 +1,17 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+// export default new Vuex.Store({
+//   state: { origin: '' },
+//   mutations: {},
+//   getters: {}
+// })
+
+export default function (item) {
+  item.app.Store = new Vuex.Store({
+    state: { origin: '' },
+    mutations: {},
+    getters: {}
+  })
+}
