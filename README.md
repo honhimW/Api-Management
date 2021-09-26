@@ -2,6 +2,7 @@
 
 A Quasar Framework app
 
+**老实说连我自己都不知道怎么重新安装，真jb难用**
 ## Install the dependencies
 ```bash
 npm install
