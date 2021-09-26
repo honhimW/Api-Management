@@ -2,7 +2,6 @@
 
 A Quasar Framework app
 
-**老实说连我自己都不知道怎么重新安装，真jb难用**
 ## Install the dependencies
 ```bash
 npm install
@@ -18,9 +17,9 @@ quasar dev
 npm run lint
 ```
 
-### Build the app for production
+### Build the app(bex) for production
 ```bash
-quasar build
+quasar build -m bex
 ```
 
 ### Customize the configuration
@@ -60,6 +59,7 @@ Esc	//弹出对话框取消
 
 - 用于编辑headers信息
 - 有一些预设的方法
+- 参考codeAce.vue-completer配置代码补全
 
 ```javascript
 // example

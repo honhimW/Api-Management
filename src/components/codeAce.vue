@@ -52,57 +52,73 @@ export default {
       enableSnippets: true
     })
     var ae = this.aceEditor
-    languageTools.addCompleter({
-      getCompletions: function (editor, session, pos, prefix, callback) {
-        if (prefix.length === 0) {
-          callback(null, [])
-          return
+    if (this.mode === 'javascript') {
+      languageTools.addCompleter({
+        getCompletions: function (editor, session, pos, prefix, callback) {
+          console.log(editor, session, pos, prefix, callback)
+          if (prefix.length === 0) {
+            callback(null, [])
+            return
+          }
+          callback(null, [{
+            name: '添加header',
+            caption: 'setHeader(',
+            snippet: 'setHeader("${1:key}", "${2:val}")',
+            score: 1000,
+            meta: 'custom'
+          },
+          {
+            name: '获取请求体',
+            caption: 'getBody()',
+            snippet: 'getBody()',
+            score: 1000,
+            meta: 'custom'
+          },
+          {
+            name: '获取header',
+            caption: 'getHeader(',
+            snippet: 'getHeader(${1:key})',
+            score: 1000,
+            meta: 'custom'
+          },
+          {
+            name: '获取环境变量',
+            caption: 'getEnvProp()',
+            snippet: 'getEnvProp(${1:key})',
+            score: 1000,
+            meta: 'custom'
+          },
+          {
+            name: '格式化当前时间',
+            caption: 'formatDate()',
+            snippet: 'formatDate()',
+            score: 200,
+            meta: 'custom'
+          },
+          {
+            name: '当前timestamp',
+            caption: 'timestamp()',
+            snippet: 'timestamp()',
+            score: 200,
+            meta: 'custom'
+          },
+          {
+            name: 'rsa加密, 传入私钥',
+            caption: 'rsawp(',
+            snippet: 'rsawp("${1:toSign}", "${2:privateKey}")',
+            score: 1000,
+            meta: 'custom'
+          }
+          ])
+        },
+        getDocTooltip: function (item) {
+          item.docHTML = [
+            '<b>', item.caption, '</b>',
+            '<hr></hr>', item.name, '<hr></hr>', item.snippet
+          ].join('')
         }
-        callback(null, [{
-          name: 'nmap',
-          value: 'new Map()',
-          score: 1,
-          meta: 'custom'
-        },
-        {
-          name: 'ktrue',
-          value: '"key": true',
-          score: 100,
-          meta: 'custom'
-        },
-        {
-          name: 'kfalse',
-          value: '"key": false',
-          score: 100,
-          meta: 'custom'
-        },
-        {
-          name: 'knum',
-          value: '"key": 0',
-          score: 100,
-          meta: 'custom'
-        },
-        {
-          name: 'karr',
-          value: '"key": []',
-          score: 100,
-          meta: 'custom'
-        },
-        {
-          name: 'kobj',
-          value: '"key": {}',
-          score: 100,
-          meta: 'custom'
-        },
-        {
-          name: 'kstr',
-          value: '"key": ""',
-          score: 100,
-          meta: 'custom'
-        }
-        ])
-      }
-    })
+      })
+    }
     ae.on('change', function (e) {
       ae.execCommand('startAutocomplete')
     })
