@@ -1,6 +1,6 @@
 {
   "name": "api-bex",
-  "version": "V1.0.1",
+  "version": "0.0.1",
   "description": "接口管理插件",
   "productName": "RequestWeb",
   "author": "honhim",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
-    "ace": "file:../ace",
+    "ace": "^1.3.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "editor.md": "^1.5.0",
