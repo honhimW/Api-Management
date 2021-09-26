@@ -3,7 +3,7 @@
     <q-card-actions class="q-gutter-md row items-start"> -->
       <div class="q-gutter-md row items-start">
         <q-input standout="bg-brown-10 text-white" v-model="cont.key" @input="input" @blur="dele_this" label="key" :dense="true" style="width:35%" input-style="color:orange"/>
-        <q-input standout="bg-brown-10 text-white" v-model="cont.val" @input="input" @blur="dele_this" label="val" :dense="true" style="width:45%" input-style="color:orange"/>
+        <q-input standout="bg-brown-10 text-white" v-model="cont.val" @input="input" @blur="dele_this" label="val" :dense="true" style="width:42%" input-style="color:orange"/>
         <q-btn flat style="color: #FF0080;width:8%" label="Del" @click="del"/>
       </div>
     <!-- </q-card-actions>
