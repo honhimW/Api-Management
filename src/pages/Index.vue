@@ -233,12 +233,21 @@ export default {
         this.respBody = {
           code: error.message
         }
-        this.$q.notify({
-          type: error.response.status.toString().startsWith('4') ? 'warning' : 'negative',
-          message: error.response.status + ', ' + (finish - start) + 'ms',
-          position: 'bottom-right',
-          timeout: 3000
-        })
+        if (error.response !== undefined) {
+          this.$q.notify({
+            type: error.response.status.toString().startsWith('4') ? 'warning' : 'negative',
+            message: error.response.status + ', ' + (finish - start) + 'ms',
+            position: 'bottom-right',
+            timeout: 3000
+          })
+        } else {
+          this.$q.notify({
+            type: 'negative',
+            message: error.message + ', ' + (finish - start) + 'ms',
+            position: 'bottom-right',
+            timeout: 3000
+          })
+        }
       })
     },
     saveRequest () {
