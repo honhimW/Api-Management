@@ -55,7 +55,6 @@ export default {
     if (this.mode === 'javascript') {
       languageTools.addCompleter({
         getCompletions: function (editor, session, pos, prefix, callback) {
-          console.log(editor, session, pos, prefix, callback)
           if (prefix.length === 0) {
             callback(null, [])
             return
