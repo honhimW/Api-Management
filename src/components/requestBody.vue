@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-card>
-      <q-card-actions class="q-pa-none" style="width:100%;height: 290px">
+      <q-card-actions class="q-pa-none" style="width:100%">
         <code-ace :value="jsonBody" :readOnly="false" :mode="'json'" style="width:100%"></code-ace>
         <q-tooltip
               content-class="transparency"

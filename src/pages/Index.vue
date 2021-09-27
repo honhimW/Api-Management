@@ -59,7 +59,7 @@
       </q-card>
     </div>
     <q-card class="q-gutter-md row items-start" style="width:94%;margin:5px">
-      <q-card-actions class="q-pa-md" style="width: 48%;margin:2px;height: 290px;align-content: baseline;overflow-y: scroll">
+      <q-card-actions class="q-pa-md" :style="headStyle">
         <request-header style="width:100%" v-for="(item, index) of headers" :cont="item" :key="index" :index="index" @isnull="isnull" @notnull="notnull"/>
         <q-tooltip
             content-class="transparency"
@@ -145,10 +145,12 @@ export default {
       changed: false,
       savedReq: {},
       newReq: {},
-      confirmSaveDL: false
+      confirmSaveDL: false,
+      headStyle: 'width: 48%;margin:2px;align-content: baseline;overflow-y: scroll'
     }
   },
   mounted () {
+    this.headStyle = 'width: 48%;margin:2px;align-content: baseline;overflow-y: scroll;height: ' + ((window.innerHeight - 150) * 0.44).toFixed() + 'px'
   },
   methods: {
     sendRequest () {

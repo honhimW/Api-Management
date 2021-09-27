@@ -32,11 +32,14 @@ export default {
     } else {
       activeTheme = this.themePathLight
     }
+    var height = window.innerHeight
+    var fontSize = (height / 60).toFixed()
+    var line = ((height - 150) * 0.44 / fontSize).toString().split('.')[0]
     this.aceEditor = ace.edit(this.$refs.ace, {
-      maxPixelHeight: 500,
-      maxLines: 20, // 最大行数，超过会自动出现滚动条
-      minLines: 20, // 最小行数，还未到最大行数时，编辑器会自动伸缩大小
-      fontSize: 14, // 编辑器内字体大小
+      maxPixelHeight: 1000,
+      maxLines: line, // 最大行数，超过会自动出现滚动条
+      minLines: line, // 最小行数，还未到最大行数时，编辑器会自动伸缩大小
+      fontSize: Number.parseInt(fontSize), // 编辑器内字体大小
       fontFamily: 'Lucida Console',
       theme: activeTheme, // 默认设置的主题
       mode: this.modePath, // 默认设置的语言模式
