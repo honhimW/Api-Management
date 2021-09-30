@@ -141,6 +141,8 @@ const fillModel = (defObj, attrs, modeName) => {
       var refModel = fillModel(defObj, attrs, clzName)
       if (refModel !== undefined) {
         child.properties = refModel.properties
+      } else {
+        child.properties = []
       }
       child.type = child.type + ':' + clzName
     }
@@ -415,17 +417,22 @@ const buildRequestModelTableAndSample = (requestList) => {
       sb += '|字段|字段类型|是否必选|说明|\n'
       sb += '|----|----|----|----|\n'
       var lm = request.modelAttr.properties
-      lm.sort((a, b) => {
-        if (a.require && !b.require) {
-          return -1
-        } else if (!a.require && b.require) {
-          return 1
-        } else {
-          return 0
-        }
-      })
-      var tableSb = ''
-      sb += recursion(lm, tableSb, 0, true)
+      if (lm !== undefined) {
+        lm.sort((a, b) => {
+          if (a.require && !b.require) {
+            return -1
+          } else if (!a.require && b.require) {
+            return 1
+          } else {
+            return 0
+          }
+        })
+        var tableSb = ''
+        sb += recursion(lm, tableSb, 0, true)
+      } else {
+        console.log(request)
+        sb += '|-|-|-|-|\n'
+      }
       sb += '\n'
     }
     sb += '\n'
