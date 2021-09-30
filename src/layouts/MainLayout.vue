@@ -84,6 +84,12 @@
                 <q-input label="Name" v-model="projectName"></q-input>
                 <q-input label="Desc" v-model="projectDesc"></q-input>
                 <q-input v-if="createType === 'Import Project(Swagger)'" label="Url" v-model="importUrl"></q-input>
+                <q-input
+                  v-model="defaultScript"
+                  filled
+                  type="textarea"
+                  label="Default Script"
+                />
               </q-card-section>
               <q-card-actions align="right" class="bg-white text-teal">
                 <q-btn flat label="Confirm" @click="confirmCP" v-close-popup/>
@@ -247,6 +253,7 @@ export default {
       projectName: '',
       projectDesc: '',
       importUrl: '',
+      defaultScript: 'function run_before_send(argument) {\n  // body...\n  setHeader("Content-Type", "application/json")\n}\nrun_before_send()',
       mdUrl: '',
       ai: {},
       selected: '',
@@ -299,10 +306,10 @@ export default {
       var promis
       switch (this.createType) {
         case 'New Project':
-          promis = Opt.createProject(this.projectName, this.projectDesc)
+          promis = Opt.createProject(this.projectName, this.projectDesc, this.defaultScript)
           break
         case 'Import Project(Swagger)':
-          promis = Opt.importFormattedModel(this.projectName, this.projectDesc, this.importUrl)
+          promis = Opt.importFormattedModel(this.projectName, this.projectDesc, this.importUrl, this.defaultScript)
           break
       }
       promis.then(resp => {

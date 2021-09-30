@@ -116,7 +116,7 @@ const isBlank = (str) => {
   return true
 }
 
-export const createProject = (name, desc) => {
+export const createProject = (name, desc, script) => {
   var promise
   var projectList = window.configStorage.projectList
   for (let i = 0; i < projectList.length; i++) {
@@ -139,7 +139,8 @@ export const createProject = (name, desc) => {
         requestList: [
           {
             name: 'New Request',
-            uuid: getUUID()
+            uuid: getUUID(),
+            preScript: script
           }
         ]
       }
@@ -147,7 +148,8 @@ export const createProject = (name, desc) => {
     requestList: [
       {
         name: 'New Request',
-        uuid: getUUID()
+        uuid: getUUID(),
+        preScript: script
       }
     ]
   }
@@ -655,7 +657,7 @@ export const updateEnv = (type, env) => {
   }
 }
 
-export const importFormattedModel = (name, desc, url) => {
+export const importFormattedModel = (name, desc, url, script) => {
   var model
   var projectList = window.configStorage.projectList
   for (let i = 0; i < projectList.length; i++) {
@@ -691,6 +693,7 @@ export const importFormattedModel = (name, desc, url) => {
             name: table.description,
             desc: '',
             uuid: getUUID(),
+            preScript: script,
             requestBody: buildExample(table.requestParam),
             method: table.requestType,
             url: url.replace('/v2/api-docs', '') + table.url
