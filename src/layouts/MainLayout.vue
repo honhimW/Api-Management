@@ -13,13 +13,13 @@
 
         <q-toolbar-title>
           Http Tool
-          <q-btn
+          <!-- <q-btn
             round
             color="teal"
             icon="play_arrow"
             style="margin-left: 15px"
             @click="workflow"
-          />
+          /> -->
           <q-btn
             round
             color="dark"
@@ -45,24 +45,6 @@
             style="margin-right: 15px"
         />
         </div>
-        <q-btn
-          round
-          color="warning"
-          icon="close"
-          @click="close"
-        >
-        <q-tooltip
-            content-class="bg-negative"
-            content-style="font-size: 16px"
-            anchor="bottom middle"
-            self="top middle"
-            :offset="[10, 10]"
-            transition-show="rotate"
-            transition-hide="rotate"
-          >
-          Close
-        </q-tooltip>
-        </q-btn>
       </q-toolbar>
     </q-header>
     <q-drawer
@@ -191,15 +173,15 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <q-dialog
+    <!-- <q-dialog
       v-model="showWF"
       persistent
       :maximized="true"
       transition-show="slide-up"
       transition-hide="slide-down"
-    >
-      <workflow :env="envProp" />
-    </q-dialog>
+    > -->
+      <!-- <workflow :env="envProp" /> -->
+    <!-- </q-dialog> -->
     <q-dialog
       v-model="showMD"
       persistent
@@ -243,6 +225,11 @@ export default {
   name: 'MainLayout',
   mounted () {
     window.routes = this.$data
+    var theme = window.localStorage.getItem('defaultTheme')
+    if (theme !== 'dark') {
+      theme = 'light'
+    }
+    this.isDark = theme
     this.toCus(getAllInfo().projectList)
   },
   data () {
@@ -307,21 +294,6 @@ export default {
   methods: {
     syncEnvCallback (envMap) {
       this.envProp = envMap
-    },
-    close () {
-      axios.get('/httpproxy/app/shutdown').then(resp => {
-        if (resp.status === 200 && resp.data === true) {
-          this.$q.notify({
-            type: 'negative',
-            message: 'Server Closed..',
-            position: 'top',
-            timeout: 1500
-          })
-        }
-      })
-    },
-    closeWindow () {
-      window.close()
     },
     confirmCP () {
       var promis

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { StringUtils } from 'src/utils/stringUtils'
 
 const baseURL = '/httpproxy'
 const axi = axios.create({
@@ -6,10 +7,28 @@ const axi = axios.create({
 })
 
 export const getWorkflow = () => {
-  return axi.request({
-    url: '/workflow/getAllWorkflow',
-    method: 'post'
-  })
+  if (window.workflowStorage !== undefined) {
+    return window.workflowStorage
+  }
+  axi.interceptors.request.use()
+  var workflowStorage = window.localStorage.getItem('workflow')
+  if (workflowStorage === undefined || workflowStorage === null) {
+    workflowStorage = {
+      workflowList: [
+        {
+          name: 'New Workflow',
+          desc: '',
+          uuid: StringUtils.getUUID(),
+          rUUIDList: []
+        }
+      ]
+    }
+    window.localStorage.setItem('config', JSON.stringify(workflowStorage))
+    window.workflowStorage = workflowStorage
+  } else {
+    window.workflowStorage = JSON.parse(workflowStorage)
+  }
+  return window.workflowStorage
 }
 
 export const addWorkflow = (name) => {

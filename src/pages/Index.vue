@@ -20,9 +20,9 @@
             v-on:keyup.enter="sendRequest()"
           />
           <q-btn
-            color="amber"
+            :color="sendButColor"
             glossy
-            label="SEND"
+            :label="sendButLabel"
             class="q-mb-none"
             style="width: 11%;height: 100%;font-size: large"
             @click="sendRequest()"
@@ -121,7 +121,7 @@ export default {
       uuid: '',
       url: '',
       sendMethod: 'POST',
-      options: ['POST', 'GET'],
+      options: ['POST', 'GET', 'PUT', 'DELETE'],
       envObj: {},
       textareaShadowText: 'Json Body',
       reqBody: {
@@ -146,6 +146,10 @@ export default {
       savedReq: {},
       newReq: {},
       confirmSaveDL: false,
+      sending: false,
+      sendButLabel: 'SEND',
+      sendButColor: 'amber',
+      cancelerHolder: {},
       headStyle: 'width: 48%;margin:2px;align-content: baseline;overflow-y: scroll'
     }
   },
@@ -154,6 +158,15 @@ export default {
   },
   methods: {
     sendRequest () {
+      if (this.sending === true) {
+        this.cancelerHolder.cancel()
+        this.sendButLabel = 'SEND'
+        this.sendButColor = 'amber'
+        return
+      }
+      this.sending = true
+      this.sendButLabel = 'ABORT'
+      this.sendButColor = 'deep-orange-12'
       var reqHeader = new Map()
       this.headers.forEach(item => {
         if (item.key !== '') {
@@ -180,6 +193,9 @@ export default {
           position: 'top',
           timeout: 2000
         })
+        this.sending = false
+        this.sendButLabel = 'SEND'
+        this.sendButColor = 'amber'
         return
       }
       if (this.url === '') {
@@ -189,6 +205,9 @@ export default {
           position: 'top',
           timeout: 1500
         })
+        this.sending = false
+        this.sendButLabel = 'SEND'
+        this.sendButColor = 'amber'
         return
       }
       this.respBody = {
@@ -199,7 +218,9 @@ export default {
         replaceUrl = this.protocol + replaceUrl
       }
       var start = Date.now()
-      send(replaceUrl, this.sendMethod, header, finalJsonBody).then(resp => {
+      var sender = send(replaceUrl, this.sendMethod, header, finalJsonBody)
+      this.cancelerHolder = sender.cancelerHolder
+      sender.request.then(resp => {
         var finish = Date.now()
         var httpDetail = {
           url: resp.config.url,
@@ -225,31 +246,53 @@ export default {
         })
       }).catch(error => {
         var finish = Date.now()
-        var httpDetail = {
-          url: error.config.url,
-          method: error.config.method.toUpperCase(),
-          headers: error.config.headers,
-          data: error.config.data
-        }
-        console.log(httpDetail)
-        this.respBody = {
-          code: error.message
-        }
-        if (error.response !== undefined) {
+        if (window.axios.isCancel(error)) {
           this.$q.notify({
-            type: error.response.status.toString().startsWith('4') ? 'warning' : 'negative',
-            message: error.response.status + ', ' + (finish - start) + 'ms',
+            type: 'warning',
+            message: 'Aborted, ' + (finish - start) + 'ms',
             position: 'bottom-right',
             timeout: 3000
           })
         } else {
-          this.$q.notify({
-            type: 'negative',
-            message: error.message + ', ' + (finish - start) + 'ms',
-            position: 'bottom-right',
-            timeout: 3000
-          })
+          var resp = error.response
+          var httpDetail = {
+            url: error.config.url,
+            method: error.config.method.toUpperCase(),
+            headers: error.config.headers,
+            data: error.config.data,
+            response: resp
+          }
+          console.log(httpDetail)
+          if (resp !== undefined) {
+            this.respBody = {
+              code: JSON.stringify({
+                status: error.response.status,
+                message: error.message,
+                data: error.response.data
+              }, null, 2)
+            }
+            this.$q.notify({
+              type: error.response.status.toString().startsWith('4') ? 'warning' : 'negative',
+              message: error.response.status + ', ' + (finish - start) + 'ms',
+              position: 'bottom-right',
+              timeout: 3000
+            })
+          } else {
+            this.respBody = {
+              code: error.message
+            }
+            this.$q.notify({
+              type: 'negative',
+              message: error.message + ', ' + (finish - start) + 'ms',
+              position: 'bottom-right',
+              timeout: 3000
+            })
+          }
         }
+      }).finally(() => {
+        this.sending = false
+        this.sendButLabel = 'SEND'
+        this.sendButColor = 'amber'
       })
     },
     saveRequest () {

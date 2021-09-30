@@ -11,7 +11,15 @@ Vue.use(Vuex)
 export default {
   name: 'App',
   mounted () {
-    this.$q.dark.set(false)
+    var theme = window.localStorage.getItem('defaultTheme')
+    if (theme === undefined || theme === null || theme !== 'dark') {
+      this.$q.dark.set(false)
+    } else {
+      this.$q.dark.set(true)
+      window.aceEditor.forEach(element => {
+        element.setTheme('ace/theme/chaos')
+      })
+    }
     window.document.onkeydown = this.route
   },
   methods: {

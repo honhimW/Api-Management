@@ -1,5 +1,6 @@
 import axi from 'axios'
 
+const CT = axi.CancelToken
 // export const post = (url, mtd, header, params) => {
 //   return axi.request({
 //     url: '/httpproxy/send',
@@ -42,11 +43,19 @@ export const post = (url, mtd, header, params) => {
 }
 
 export const send = (url, mtd, header, params) => {
-  return axi.request({
-    url: url,
-    method: mtd.toUpperCase(),
-    headers: JSON.parse(header),
-    data: params,
-    timeout: 20000
-  })
+  window.axios = axi
+  var cancelerHolder = {}
+  return {
+    request: axi.request({
+      url: url,
+      method: mtd.toUpperCase(),
+      headers: JSON.parse(header),
+      data: params,
+      timeout: 20000,
+      cancelToken: new CT((cancler) => {
+        cancelerHolder.cancel = cancler
+      })
+    }),
+    cancelerHolder
+  }
 }

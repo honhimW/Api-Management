@@ -693,7 +693,7 @@ export const importFormattedModel = (name, desc, url) => {
             uuid: getUUID(),
             requestBody: buildExample(table.requestParam),
             method: table.requestType,
-            url: url.replace('/v2/api-docs', '') + table
+            url: url.replace('/v2/api-docs', '') + table.url
           }
           group.requestList.push(request)
         })
