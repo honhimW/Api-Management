@@ -1,6 +1,9 @@
 import axi from 'axios'
+import https from 'https'
 
 const CT = axi.CancelToken
+
+window.axios = axi
 // export const post = (url, mtd, header, params) => {
 //   return axi.request({
 //     url: '/httpproxy/send',
@@ -43,7 +46,6 @@ export const post = (url, mtd, header, params) => {
 }
 
 export const send = (url, mtd, header, params) => {
-  window.axios = axi
   var cancelerHolder = {}
   return {
     request: axi.request({
@@ -54,6 +56,9 @@ export const send = (url, mtd, header, params) => {
       timeout: 20000,
       cancelToken: new CT((cancler) => {
         cancelerHolder.cancel = cancler
+      }),
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
       })
     }),
     cancelerHolder

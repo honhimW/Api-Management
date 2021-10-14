@@ -145,6 +145,8 @@ const fillModel = (defObj, attrs, modeName) => {
         child.properties = []
       }
       child.type = child.type + ':' + clzName
+    } else if (items !== undefined && attrInfo.type === 'array') {
+      child.type += ':' + items.type
     }
     child.description = attrInfo.description
     if (required !== undefined) {
@@ -322,11 +324,12 @@ const processResponseParam = (too, attrs) => {
 }
 
 const getValue = (type, modelAttr) => {
+  var currentType = type
   var pos = type.indexOf(':')
   if (pos !== -1) {
-    type = type.substring(0, pos)
+    currentType = type.substring(0, pos)
   }
-  switch (type) {
+  switch (currentType) {
     case 'string':
       return 'string'
     case 'string(date-time)':
@@ -348,6 +351,8 @@ const getValue = (type, modelAttr) => {
         modelAttr.properties.forEach(property => {
           map[property.name] = getValue(property.type, property)
         })
+      } else {
+        map = getValue(type.substring(pos + 1), undefined)
       }
       list.push(map)
       return list
@@ -419,9 +424,9 @@ const buildRequestModelTableAndSample = (requestList) => {
       var lm = request.modelAttr.properties
       if (lm !== undefined) {
         lm.sort((a, b) => {
-          if (a.require && !b.require) {
+          if (a.required && !b.required) {
             return -1
-          } else if (!a.require && b.require) {
+          } else if (!a.required && b.required) {
             return 1
           } else {
             return 0
@@ -448,7 +453,7 @@ const recursion = (lm, tableSb, deep, select) => {
     }
     paramName += modelAttr.name
     if (select) {
-      tableSb += '|' + paramName + '|' + modelAttr.type + '|' + (modelAttr.require ? '是' : '否') + '|' + defaultIfBlank(modelAttr.description, '-') + '|\n'
+      tableSb += '|' + paramName + '|' + modelAttr.type + '|' + (modelAttr.required ? '是' : '否') + '|' + defaultIfBlank(modelAttr.description, '-') + '|\n'
     } else {
       tableSb += '|' + paramName + '|' + modelAttr.type + '|' + defaultIfBlank(modelAttr.description, '-') + '|\n'
     }

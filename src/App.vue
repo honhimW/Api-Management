@@ -16,9 +16,9 @@ export default {
       this.$q.dark.set(false)
     } else {
       this.$q.dark.set(true)
-      window.aceEditor.forEach(element => {
-        element.setTheme('ace/theme/chaos')
-      })
+      // window.aceEditor.forEach(element => {
+      //   element.setTheme('ace/theme/chaos')
+      // })
     }
     window.document.onkeydown = this.route
   },
