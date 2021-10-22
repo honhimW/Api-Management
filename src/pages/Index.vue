@@ -279,7 +279,12 @@ export default {
             })
           } else {
             this.respBody = {
-              code: error.message
+              code: JSON.stringify({
+                message: error.message,
+                reason: 'Failed to load response data',
+                tips: '浏览框输入链接检查是否可达, 该错误可能的原因: 地址错误、浏览器安全...',
+                url: error.config.url
+              }, null, 2)
             }
             this.$q.notify({
               type: 'negative',
