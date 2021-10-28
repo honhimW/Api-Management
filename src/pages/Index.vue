@@ -110,6 +110,7 @@ import RespondBody from 'src/components/respondBody.vue'
 import { map2Json, obj2Array } from 'src/utils/convert'
 import { Opt } from 'src/utils/opt'
 import { deepClone } from 'src/utils/deepClone'
+import Randexp from 'randexp'
 export default {
   components: { requestBody, requestHeader, PreScript, RespondBody },
   name: 'PageIndex',
@@ -184,6 +185,7 @@ export default {
         globalProp.body = finalJsonBody
         globalProp = this.userCodeEditHeader(this.javaScriptCode.code, globalProp)
         reqHeader = globalProp.headers
+        finalJsonBody = globalProp.body
         var header = map2Json(reqHeader)
       } catch (error) {
         var message = error.message === undefined ? error : error.message
@@ -433,6 +435,7 @@ export default {
     this.$root.$on('openRequest', this.openRequestCallback)
     this.$root.$on('synCEnv', this.syncEnvCallback)
     this.$root.$on('checkChange', this.checkChange)
+    window.Randexp = Randexp
   }
 }
 </script>

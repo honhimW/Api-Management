@@ -1,6 +1,7 @@
 import Interpreter from 'js-interpreter'
 import Md5 from 'md5'
 import jsrsasign, { KEYUTIL, KJUR } from 'jsrsasign'
+import Randexp from 'randexp'
 
 /**
  * 定义方法
@@ -17,6 +18,18 @@ function inv (interpreter, globalObject) {
     return globalProp.body
   }
   interpreter.setProperty(globalObject, 'getBody', interpreter.createNativeFunction(innerGetBody))
+  // setBody
+  var innerSetBody = function (str) {
+    globalProp.body = str
+    return true
+  }
+  interpreter.setProperty(globalObject, 'setBody', interpreter.createNativeFunction(innerSetBody))
+  // mockData
+  var innerMockData = function (str) {
+    return new Randexp(str).gen()
+  }
+  interpreter.setProperty(globalObject, 'mockData', interpreter.createNativeFunction(innerMockData))
+
   var innerGetHeaders = function (key) {
     return globalProp.headers.get(key)
   }
@@ -56,11 +69,6 @@ function inv (interpreter, globalObject) {
   }
   interpreter.setProperty(globalObject, 'timestamp', interpreter.createNativeFunction(innerTimestamp))
   // signSHA256withRSA
-  var innerSignSHA256withRSA = function (str) {
-    return signSHA256withRSA(str)
-  }
-  interpreter.setProperty(globalObject, 'rsa', interpreter.createNativeFunction(innerSignSHA256withRSA))
-  // signSHA256withRSA
   var innerSignSHA256withRSAwithPK = function (str, pk) {
     return signSHA256withRSAwithPK(str, pk)
   }
@@ -73,10 +81,12 @@ function inv (interpreter, globalObject) {
     return dateFormat(fmt, new Date())
   }
   interpreter.setProperty(globalObject, 'formatDate', interpreter.createNativeFunction(innerDateFormat))
+  // alert
   var innerAlert = function (msg) {
     return alert(msg)
   }
   interpreter.setProperty(globalObject, 'alert', interpreter.createNativeFunction(innerAlert))
+  // log
   var innerLog = function (obj) {
     return console.log(obj)
   }

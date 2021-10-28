@@ -77,6 +77,13 @@ export default {
             meta: 'custom'
           },
           {
+            name: '设置请求体',
+            caption: 'setBody(',
+            snippet: 'setBody(${1:body})',
+            score: 1000,
+            meta: 'custom'
+          },
+          {
             name: '获取header',
             caption: 'getHeader(',
             snippet: 'getHeader(${1:key})',
@@ -91,7 +98,7 @@ export default {
             meta: 'custom'
           },
           {
-            name: '格式化当前时间',
+            name: '格式化当前时间, 默认: YYYYmmddHHMMSS',
             caption: 'formatDate()',
             snippet: 'formatDate()',
             score: 200,
@@ -102,6 +109,13 @@ export default {
             caption: 'timestamp()',
             snippet: 'timestamp()',
             score: 200,
+            meta: 'custom'
+          },
+          {
+            name: '模拟数据, 传入正则表达式, 返回随机生成的字符串',
+            caption: 'mockData(',
+            snippet: 'mockData("${1:reg}")',
+            score: 1000,
             meta: 'custom'
           },
           {
