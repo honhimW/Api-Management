@@ -93,7 +93,7 @@
         <q-banner v-if="currentEnvProps.length > 1">
           <div v-for="(item, index) of currentEnvProps" :key="index" style="max-width: 60vh">
             <div class="my-card flex justify-left items-center" v-if="item.key !== ''" style="height: 45px">
-                <q-input  v-model="item.key" :dense="true" readonly :borderless="true" input-style="color:orange" style="width: 150px;height:100%"/>
+                <q-input  v-model="item.key" :dense="true" readonly :borderless="true" input-style="color:orange" style="width: 130px;height:100%"/>
                 <span>&thinsp;&thinsp;=&thinsp;&thinsp;</span>
                 <q-input  v-model="item.val" :dense="true" readonly :borderless="true" input-style="color:orange" style="width: 300px;height:100%"/>
             </div>

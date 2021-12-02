@@ -81,7 +81,7 @@
                   <div class="q-pa-md">
                     <q-tree
                       :nodes="requests"
-                      node-key="uuid"
+                      node-key="idx"
                       selected-color="dark"
                       :selected.sync="selectedREQ"
                       default-expand-all
@@ -115,7 +115,7 @@
                     class="text-white bg-teal"
                     style="height: 100%"
                   >
-                    <q-tab-panel v-for="(item, index) of requests" :key="index" :name="item.uuid">
+                    <q-tab-panel v-for="(item, index) of requests" :key="index" :name="item.idx">
                       <div class="text-h4 q-mb-md">{{item.label}}</div>
                       <p class="text-h5 q-mb-md">URL:</p>
                       <q-input readonly :value="replace(item.url)" class="text-h6 q-mb-md" style="width:100%"></q-input>
@@ -142,13 +142,14 @@
 </template>
 
 <script>
-import { getAllInfo, getRequest } from 'src/utils/opt'
+import { getRequest, Opt } from 'src/utils/opt'
 import { map2Json, obj2Array, map2Array } from 'src/utils/convert'
 import { Wf } from 'src/utils/workflow'
 import { editHeader } from 'src/utils/interpreter'
 // import { post, httpDetail } from 'src/utils/ajaxSend'
-import { post } from 'src/utils/ajaxSend'
+import { send } from 'src/utils/ajaxSend'
 import { exportFile } from 'quasar'
+import { StringUtils } from 'src/utils/stringUtils'
 export default {
   props: {
     env: {
@@ -219,8 +220,8 @@ export default {
           var globalProp = {}
           globalProp.envProp = this.env
           globalProp.headers = reqHeader
-          globalProp.body = JSON.stringify(JSON.parse(req.body))
-          globalProp = this.userCodeEditHeader(req.preScript, globalProp)
+          globalProp.body = StringUtils.isBlank(req.body) ? '' : JSON.stringify(JSON.parse(req.body))
+          globalProp = this.userCodeEditHeader(StringUtils.defaultIfBlank(req.preScript, ''), globalProp)
           reqHeader = globalProp.headers
           var header = map2Json(reqHeader)
         } catch (error) {
@@ -237,30 +238,17 @@ export default {
         if (!replaceUrl.startsWith('http://') && !replaceUrl.startsWith('https://')) {
           replaceUrl = 'http://' + replaceUrl
         }
-        // httpDetail(replaceUrl, req.method, header, JSON.stringify(JSON.parse(req.body))).then(resp => {
-        //   if (resp.status === 200) {
-        //     result.http = resp.data.body
-        //     var body = result.http.body
-        //     if (body !== undefined || body !== null) {
-        //       try {
-        //         body = JSON.parse(body)
-        //         result.http.body = body
-        //       } catch (error) {
-        //       }
-        //     }
-        //     post(replaceUrl, req.method, header, JSON.stringify(JSON.parse(req.body))).then(resp => {
-        //       if (resp.status === 200) {
-        //         result.result = resp.data
-        //       }
-        //       results.push(result)
-        //       this.result = JSON.stringify(results, null, 4)
-        //     })
-        //   }
-        // })
-        post(replaceUrl, req.method, header, JSON.stringify(JSON.parse(req.body))).then(resp => {
-          if (resp.status === 200) {
-            result.result = resp.data
+        console.log('hello')
+        var sender = send(replaceUrl, req.method, header, JSON.stringify(JSON.parse(req.body)))
+        sender.request.then(resp => {
+          var httpDetail = {
+            url: resp.config.url,
+            method: resp.config.method.toUpperCase(),
+            headers: resp.config.headers,
+            data: resp.config.data
           }
+          console.log(httpDetail)
+          result.result = resp.statusText
           results.push(result)
           this.result = JSON.stringify(results, null, 4)
         })
@@ -269,7 +257,7 @@ export default {
     },
     removeWorkflow (node) {
       Wf.removeWorkflow(node.uuid).then(resp => {
-        if (resp.status === 200) {
+        if (resp === 'succeed') {
           this.refreshWorkFlow()
         }
       })
@@ -279,7 +267,7 @@ export default {
     },
     confirmCWF () {
       Wf.addWorkflow(this.newWFName).then(resp => {
-        if (resp.status === 200) {
+        if (resp === 'succeed') {
           this.refreshWorkFlow()
         }
         this.newWFName = ''
@@ -319,18 +307,22 @@ export default {
     add2WF (node) {
       var req = this.nodeMap.get(node.uuid)
       Wf.addRequest(req.label, req.group, req.project, req.uuid, this.selectedWF).then(resp => {
-        this.workflowMap.set(resp.data.body.uuid, resp.data.body.requestList)
-        this.refreshReqList(resp.data.body.uuid)
+        if (resp === 'succeed') {
+          this.refreshWorkFlow()
+          this.refreshReqList(this.selectedWF)
+        }
       })
     },
     removeREQ (node) {
       var requestList = this.workflowMap.get(this.selectedWF)
-      var oidx = requestList.findIndex(req => {
-        return req.uuid === node.uuid
+      var oidx = requestList.findIndex(uuid => {
+        return uuid === node.uuid
       })
-      Wf.removeRequest(node.label, this.selectedWF, oidx).then(resp => {
-        this.workflowMap.set(resp.data.body.uuid, resp.data.body.requestList)
-        this.refreshReqList(resp.data.body.uuid)
+      Wf.removeRequest(node.uuid, this.selectedWF, oidx).then(resp => {
+        if (resp === 'succeed') {
+          this.refreshWorkFlow()
+          this.refreshReqList(this.selectedWF)
+        }
       })
     },
     resetFilter () {
@@ -387,38 +379,49 @@ export default {
       this.nodeMap = map
     },
     refreshTree () {
-      getAllInfo().then(resp => {
-        this.toCus(resp.data.projectList)
-      })
+      this.toCus(Opt.getAllInfo().projectList)
     },
     refreshWorkFlow () {
-      Wf.getWorkflow().then(resp => {
-        this.workflows = []
-        this.workflowMap = new Map()
-        resp.data.workflowList.forEach(wf => {
-          this.workflows.push({
-            uuid: wf.uuid,
-            label: wf.name,
-            desc: wf.desc,
-            requestList: wf.requestList
-          })
-          this.workflowMap.set(wf.uuid, wf.requestList)
+      var workflowStorage = Wf.getWorkflow()
+      this.workflows = []
+      this.workflowMap = new Map()
+      workflowStorage.workflowList.forEach(wf => {
+        this.workflows.push({
+          uuid: wf.uuid,
+          label: wf.name,
+          desc: wf.desc,
+          requestList: wf.rUUIDList
         })
+        this.workflowMap.set(wf.uuid, wf.rUUIDList)
       })
     },
     refreshReqList (uuid) {
       var requestList = this.workflowMap.get(uuid)
       if (requestList !== undefined) {
         this.requests = []
-        requestList.forEach(request => {
+        var idx = 0
+        requestList.forEach(requestId => {
+          var request = Opt.getRequestByUUID(requestId)
+          if (request === undefined) {
+            request = {
+              name: 'undefined',
+              uuid: StringUtils.getUUID(),
+              url: '',
+              method: 'GET',
+              headers: [],
+              body: '{}',
+              preScript: ''
+            }
+          }
           this.requests.push({
-            label: request.name,
-            uuid: request.uuid,
-            url: request.url,
-            method: request.method,
+            idx: (idx++) + '',
+            label: StringUtils.defaultIfBlank(request.name, ''),
+            uuid: StringUtils.defaultIfBlank(request.uuid, StringUtils.getUUID()),
+            url: StringUtils.defaultIfBlank(request.url, ''),
+            method: StringUtils.defaultIfBlank(request.method, 'GET'),
             headers: obj2Array(request.header),
-            body: request.requestBody,
-            preScript: request.preScript
+            body: StringUtils.defaultIfBlank(request.requestBody, '{}'),
+            preScript: StringUtils.defaultIfBlank(request.preScript, '')
           })
         })
       }

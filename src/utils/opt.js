@@ -5,7 +5,22 @@ import { trans, buildExample } from './trans'
 export const save = () => {
   if (window.configStorage !== undefined) {
     window.localStorage.setItem('config', JSON.stringify(window.configStorage))
+    cache()
   }
+}
+
+const cache = () => {
+  window.cacheRequest = new Map()
+  window.configStorage.projectList.forEach(pro => {
+    pro.requestList.forEach(req => {
+      window.cacheRequest.set(req.uuid, req)
+    })
+    pro.groupList.forEach(group => {
+      group.requestList.forEach(req => {
+        window.cacheRequest.set(req.uuid, req)
+      })
+    })
+  })
 }
 
 export const saveRequest = (requestName, groupName, projectName, uuid, request) => {
@@ -53,6 +68,13 @@ export const getRequest = (projectName, groupName, requestName, uuid) => {
   return undefined
 }
 
+export const getRequestByUUID = (uuid) => {
+  if (window.cacheRequest !== undefined) {
+    return window.cacheRequest.get(uuid)
+  }
+  return undefined
+}
+
 export const getAllInfo = () => {
   if (window.configStorage !== undefined) {
     return window.configStorage
@@ -89,10 +111,11 @@ export const getAllInfo = () => {
         uuid: getUUID()
       }]
     }
-    window.localStorage.setItem('config', JSON.stringify(configStorage))
     window.configStorage = configStorage
+    save()
   } else {
     window.configStorage = JSON.parse(configStorage)
+    cache()
   }
   return window.configStorage
 }
@@ -717,8 +740,10 @@ export const getUUID = () => {
 
 export const Opt = {
   save,
+  getAllInfo,
   saveRequest,
   getRequest,
+  getRequestByUUID,
   createProject,
   createGroup,
   createRequestOnProjcet,

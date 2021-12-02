@@ -13,13 +13,13 @@
 
         <q-toolbar-title>
           Http Tool
-          <!-- <q-btn
+          <q-btn
             round
             color="teal"
             icon="play_arrow"
             style="margin-left: 15px"
             @click="workflow"
-          /> -->
+          />
           <q-btn
             round
             color="dark"
@@ -70,7 +70,7 @@
             <q-list>
               <q-item v-for="(item, index) of createProjectOpt" :key="index" clickable v-close-popup @click="createProject(item)">
                 <q-item-section>
-                  <q-item-label style="font-size:4px">{{item}}</q-item-label>
+                  <q-item-label>{{item}}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -114,7 +114,7 @@
           <template v-slot:default-header="prop">
             <div class="row items-center">
               <q-icon :name="prop.node.icon || 'school'" color="orange" size="16px" class="q-mr-sm" />
-              <div class="text-weight-bold" style="margin-right: 10px; font-size:10px">{{ prop.node.label }}</div>
+              <div class="text-weight-bold" style="margin-right: 10px">{{ prop.node.label }}</div>
               <q-btn-dropdown
                 color="primary"
                 flat
@@ -124,7 +124,7 @@
                 <q-list>
                   <q-item v-for="(item, index) of getOpt(prop.node.header)" :key="index" clickable v-close-popup @click="selectNodeOtp(prop.node, item)">
                     <q-item-section>
-                      <q-item-label style="font-size:4px; width: 100px">{{item}}</q-item-label>
+                      <q-item-label style="font-size:12px; width: 100px">{{item}}</q-item-label>
                     </q-item-section>
                   </q-item>
                 </q-list>
@@ -179,15 +179,15 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <!-- <q-dialog
+    <q-dialog
       v-model="showWF"
       persistent
       :maximized="true"
       transition-show="slide-up"
       transition-hide="slide-down"
-    > -->
-      <!-- <workflow :env="envProp" /> -->
-    <!-- </q-dialog> -->
+    >
+      <workflow :env="envProp" />
+    </q-dialog>
     <q-dialog
       v-model="showMD"
       persistent

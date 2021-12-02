@@ -28,6 +28,9 @@ export const map2Array = (map) => {
 
 export const obj2Array = (obj) => {
   var arr = []
+  if (obj === undefined) {
+    return arr
+  }
   for (var key in obj) {
     arr.push({
       key,
