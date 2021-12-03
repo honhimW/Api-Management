@@ -9,6 +9,7 @@ npm install
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 ```bash
+// quasar.cmd -> .\node_modules\.bin\quasar.cmd
 quasar dev
 ```
 
@@ -20,6 +21,11 @@ npm run lint
 ### Build the app(bex) for production
 ```bash
 quasar build -m bex
+```
+
+### Build the app(electron) for production
+```bash
+quasar build -m electron
 ```
 
 ### Customize the configuration
