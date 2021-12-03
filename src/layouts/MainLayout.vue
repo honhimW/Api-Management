@@ -133,10 +133,10 @@
           </template>
 
           <template v-slot:default-body="prop">
-            <div v-if="prop.node.story" class="text-orange-5" style="font-size:4px">
+            <div v-if="prop.node.story" class="text-orange-5" style="font-size:12px">
               {{ prop.node.story }}
             </div>
-            <span v-else class="text-brown-5" style="font-size:4px">no desc.</span>
+            <span v-else class="text-brown-5" style="font-size:12px">no desc.</span>
           </template>
         </q-tree>
       </q-list>

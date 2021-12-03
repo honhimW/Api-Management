@@ -34,12 +34,13 @@ export default {
     }
     var height = window.innerHeight
     var fontSize = (height / 60).toFixed()
-    var line = ((height - 150) * 0.44 / fontSize).toString().split('.')[0]
+    this.fontSize = fontSize
+    this.lines = ((height - 150) * 0.44 / fontSize).toString().split('.')[0]
     this.aceEditor = ace.edit(this.$refs.ace, {
       maxPixelHeight: 1000,
-      maxLines: line, // 最大行数，超过会自动出现滚动条
-      minLines: line, // 最小行数，还未到最大行数时，编辑器会自动伸缩大小
-      fontSize: Number.parseInt(fontSize), // 编辑器内字体大小
+      maxLines: this.lines, // 最大行数，超过会自动出现滚动条
+      minLines: this.lines, // 最小行数，还未到最大行数时，编辑器会自动伸缩大小
+      fontSize: this.fontSize, // 编辑器内字体大小
       fontFamily: 'Lucida Console',
       theme: activeTheme, // 默认设置的主题
       mode: this.modePath, // 默认设置的语言模式
@@ -142,14 +143,28 @@ export default {
       window.aceEditor = new Set()
     }
     window.aceEditor.add(this.aceEditor)
+    window.onresize = () => {
+      window.aceEditor.forEach(aceE => {
+        var height = window.innerHeight
+        var fs = (height / 60).toFixed()
+        var fontSize = Number.parseInt(fs)
+        var lines = ((height - 150) * 0.44 / fs).toString().split('.')[0]
+        aceE.setOption('maxLines', lines)
+        aceE.setOption('minLines', lines)
+        aceE.setOption('fontSize', fontSize)
+      })
+    }
   },
   data () {
     return {
       // codeValue: this.value.code,
       aceEditor: null,
+      clientHeight: `${window.innerHeight}`,
+      fontSize: 0,
+      lines: 0,
       themePathDark: 'ace/theme/chaos', // 不导入 webpack-resolver，该模块路径会报错
       themePathLight: 'ace/theme/tomorrow', // 不导入 webpack-resolver，该模块路径会报错
-      modePath: 'ace/mode/' + this.mode // 同上 'ace/mode/html'
+      modePath: 'ace/mode/' + this.mode // 同上 'ace/mode/html',
     }
   },
   methods: {
@@ -184,8 +199,8 @@ export default {
       // this.value.code = this.aceEditor.getValue()
     },
     input (e) {
-      // console.log(e)
-      // this.$root.$emit('checkChange', this.value.code)
+      console.log(e)
+      this.$root.$emit('checkChange', this.value.code)
     }
   },
   watch: {

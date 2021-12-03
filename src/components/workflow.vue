@@ -116,19 +116,17 @@
                     style="height: 100%"
                   >
                     <q-tab-panel v-for="(item, index) of requests" :key="index" :name="item.idx">
-                      <div class="text-h4 q-mb-md">{{item.label}}</div>
-                      <p class="text-h5 q-mb-md">URL:</p>
-                      <q-input readonly :value="replace(item.url)" class="text-h6 q-mb-md" style="width:100%"></q-input>
-                      <p class="text-h5 q-mb-md">Method:</p>
-                      <q-input readonly :value="item.method" class="text-h6 q-mb-md" style="width:100%"></q-input>
-                      <p class="text-h5 q-mb-md">Headers:</p>
+                      <div class="text-h5 q-mb-md">{{item.label}}</div>
+                      <q-input :dense="true" label="URL" readonly :value="replace(item.url)" class="q-mb-md" style="width:100%"></q-input>
+                      <q-input :dense="true" label="METHOD" readonly :value="item.method" class="q-mb-md" style="width:100%"></q-input>
+                      <p class="text-h6 q-mb-md">Headers:</p>
                       <template v-if="item.headers !== null">
                         <template v-for="(head, idx) of runScript(item)">
-                          <q-input v-if="head.key !== ''" :key="idx" readonly :value="head.key + ' = ' + head.val" class="text-h6 q-mb-md" style="width:100%"></q-input>
+                          <q-input :dense="true" :label="head.key" v-if="head.key !== ''" :key="idx" readonly :value="head.val" class="q-mb-md" style="width:100%"></q-input>
                         </template>
                       </template>
-                      <p class="text-h5 q-mb-md">Requestbody:</p>
-                      <q-input readonly :value="item.body" type="textarea" class="text-h6 q-mb-md" style="width:100%"></q-input>
+                      <p class="text-h6 q-mb-md">Requestbody:</p>
+                      <q-input :dense="true" readonly :value="item.body" type="textarea" class="q-mb-md" style="width:100%"></q-input>
                     </q-tab-panel>
                   </q-tab-panels>
                 </template>
@@ -216,11 +214,14 @@ export default {
             reqHeader.set(item.key, this.replace(item.val))
           }
         })
+        var globalProp = {}
         try {
-          var globalProp = {}
           globalProp.envProp = this.env
           globalProp.headers = reqHeader
-          globalProp.body = StringUtils.isBlank(req.body) ? '' : JSON.stringify(JSON.parse(req.body))
+          var body = StringUtils.isBlank(req.body) ? {} : JSON.parse(req.body)
+          var changedBody = this.replaceBody(body)
+          var finalBody = JSON.stringify(changedBody)
+          globalProp.body = finalBody
           globalProp = this.userCodeEditHeader(StringUtils.defaultIfBlank(req.preScript, ''), globalProp)
           reqHeader = globalProp.headers
           var header = map2Json(reqHeader)
@@ -238,17 +239,32 @@ export default {
         if (!replaceUrl.startsWith('http://') && !replaceUrl.startsWith('https://')) {
           replaceUrl = 'http://' + replaceUrl
         }
-        console.log('hello')
-        var sender = send(replaceUrl, req.method, header, JSON.stringify(JSON.parse(req.body)))
+        var sender = send(replaceUrl, req.method, header, globalProp.body)
         sender.request.then(resp => {
           var httpDetail = {
             url: resp.config.url,
             method: resp.config.method.toUpperCase(),
             headers: resp.config.headers,
-            data: resp.config.data
+            data: resp.config.data,
+            response: resp.data
           }
           console.log(httpDetail)
+          result.httpDetail = httpDetail
           result.result = resp.statusText
+          results.push(result)
+          this.result = JSON.stringify(results, null, 4)
+        }).catch(error => {
+          var resp = error.response
+          var httpDetail = {
+            url: error.config.url,
+            method: error.config.method.toUpperCase(),
+            headers: error.config.headers,
+            data: error.config.data,
+            response: resp
+          }
+          console.log(httpDetail)
+          result.httpDetail = httpDetail
+          result.result = error.name
           results.push(result)
           this.result = JSON.stringify(results, null, 4)
         })
@@ -436,6 +452,26 @@ export default {
         var p = this.env.get(s)
         return p === undefined ? '' : p
       })
+    },
+    replaceBody (body) {
+      if (body === null || body === undefined) {
+        return
+      }
+      for (var [k, v] of this.env) {
+        if (k !== undefined && k.startsWith('J_')) {
+          var param = k.substring(2)
+          this.replaceValue(body, param, v)
+        }
+      }
+      return body
+    },
+    replaceValue (obj, key, value) {
+      if (obj[key]) {
+        obj[key] = value
+        Object.keys(obj).forEach(k => {
+          this.replaceValue(obj[k], key, value)
+        })
+      }
     },
     getReq () {
       getRequest()
