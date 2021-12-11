@@ -122,6 +122,7 @@ export const removeRequest = (requestUUID, workflowUUID, oldIdx) => {
 }
 
 export const Wf = {
+  save,
   getWorkflow,
   addWorkflow,
   removeWorkflow,

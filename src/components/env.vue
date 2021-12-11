@@ -44,7 +44,7 @@
                   <q-avatar :icon="item.icon"/>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label style="font-size:4px">{{item.name}}</q-item-label>
+                  <q-item-label>{{item.name}}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -130,6 +130,7 @@ export default {
   mounted () {
     this.split()
     this.syncEnv()
+    this.$root.$on('importEnv', this.split)
   },
   data () {
     return {

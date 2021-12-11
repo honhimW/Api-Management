@@ -102,6 +102,7 @@
                       </q-card-section>
                       <q-card-actions align="right" class="bg-white text-teal">
                         <q-btn flat label="Download" @click="download" v-close-popup/>
+                        <q-btn flat label="Download Markdown" @click="downloadMarkdown" v-close-popup/>
                       </q-card-actions>
                     </q-card>
                   </q-dialog>
@@ -200,76 +201,131 @@ export default {
       })
       exportFile(finded.label + '_' + this.dateFormat('YYYYmmddHHMMSS', new Date()), this.result)
     },
+    downloadMarkdown () {
+      var finded = this.workflows.find(wf => {
+        return wf.uuid === this.selectedWF
+      })
+      var results = JSON.parse(this.result)
+      var LF = '\n'
+      var str = '# ' + finded.label + LF
+      if (this.env.size > 0) {
+        str += '## 环境变量表' + LF
+        str += '|KEY|VALUE|' + LF
+        str += '|-|-|' + LF
+        for (var [k, v] of this.env) {
+          str += '|' + k + '|' + v + '|' + LF
+        }
+        str += '---' + LF
+      }
+      results.forEach(result => {
+        var title = result.name
+        var httpDetail = result.httpDetail
+        var res = result.result
+        str += '### ' + title + LF
+        str += '> URL: ' + httpDetail.url + ' ' + LF
+        str += '> METHOD: ' + httpDetail.method + ' ' + LF
+        str += '> RESULT: ' + res + LF
+        str += '#### Request Headers' + LF
+        str += '|KEY|VALUE|' + LF
+        str += '|-|-|' + LF
+        Object.keys(httpDetail.headers).forEach(key => {
+          str += '|' + key + '|' + httpDetail.headers[key] + '|' + LF
+        })
+        str += '#### Request Body' + LF
+        str += '```json' + LF
+        str += JSON.stringify(JSON.parse(httpDetail.data), null, 4) + LF
+        str += '```' + LF
+        str += '#### Response Body' + LF
+        str += '```json' + LF
+        str += JSON.stringify(httpDetail.response, null, 4) + LF
+        str += '```' + LF
+        str += '---' + LF
+      })
+      exportFile(finded.label + '_' + this.dateFormat('YYYYmmddHHMMSS', new Date()) + '.md', str)
+    },
     runWorkflow () {
       var results = []
       var isContinue = true
-      this.requests.forEach(req => {
-        if (!isContinue) {
-          return
-        }
-        var reqHeader = new Map()
-        var result = {}
-        req.headers.forEach(item => {
-          if (item.key !== '') {
-            reqHeader.set(item.key, this.replace(item.val))
-          }
-        })
-        var globalProp = {}
-        try {
-          globalProp.envProp = this.env
-          globalProp.headers = reqHeader
-          var body = StringUtils.isBlank(req.body) ? {} : JSON.parse(req.body)
-          var changedBody = this.replaceBody(body)
-          var finalBody = JSON.stringify(changedBody)
-          globalProp.body = finalBody
-          globalProp = this.userCodeEditHeader(StringUtils.defaultIfBlank(req.preScript, ''), globalProp)
-          reqHeader = globalProp.headers
-          var header = map2Json(reqHeader)
-        } catch (error) {
-          result.warning = error.message
-          isContinue = false
-          return
-        }
-        if (req.url === '') {
-          result.warning = 'URI is empty'
-          isContinue = false
-          return
-        }
-        var replaceUrl = this.replace(req.url)
-        if (!replaceUrl.startsWith('http://') && !replaceUrl.startsWith('https://')) {
-          replaceUrl = 'http://' + replaceUrl
-        }
-        var sender = send(replaceUrl, req.method, header, globalProp.body)
-        sender.request.then(resp => {
-          var httpDetail = {
-            url: resp.config.url,
-            method: resp.config.method.toUpperCase(),
-            headers: resp.config.headers,
-            data: resp.config.data,
-            response: resp.data
-          }
-          console.log(httpDetail)
-          result.httpDetail = httpDetail
-          result.result = resp.statusText
-          results.push(result)
-          this.result = JSON.stringify(results, null, 4)
-        }).catch(error => {
-          var resp = error.response
-          var httpDetail = {
-            url: error.config.url,
-            method: error.config.method.toUpperCase(),
-            headers: error.config.headers,
-            data: error.config.data,
-            response: resp
-          }
-          console.log(httpDetail)
-          result.httpDetail = httpDetail
-          result.result = error.name
-          results.push(result)
-          this.result = JSON.stringify(results, null, 4)
-        })
-      })
+      this.runRequest(this.requests.entries(), results, isContinue)
       this.resultdl = true
+    },
+    runRequest (iterator, results, isContinue) {
+      var ele
+      var req
+      if ((ele = iterator.next()).done) {
+        this.result = JSON.stringify(results, null, 4)
+        return
+      } else {
+        req = ele.value[1]
+      }
+      var reqHeader = new Map()
+      var result = {
+        name: req.label
+      }
+      req.headers.forEach(item => {
+        if (item.key !== '') {
+          reqHeader.set(item.key, this.replace(item.val))
+        }
+      })
+      var globalProp = {}
+      try {
+        globalProp.envProp = this.env
+        globalProp.headers = reqHeader
+        var body = StringUtils.isBlank(req.body) ? {} : JSON.parse(req.body)
+        var changedBody = this.replaceBody(body)
+        var finalBody = JSON.stringify(changedBody)
+        globalProp.body = finalBody
+        globalProp = this.userCodeEditHeader(StringUtils.defaultIfBlank(req.preScript, ''), globalProp)
+        reqHeader = globalProp.headers
+        var header = map2Json(reqHeader)
+      } catch (error) {
+        result.warning = error.message
+        results.push(result)
+        this.result = JSON.stringify(results, null, 4)
+        return
+      }
+      if (req.url === '') {
+        result.warning = 'URI is empty'
+        results.push(result)
+        this.result = JSON.stringify(results, null, 4)
+        return
+      }
+      var replaceUrl = this.replace(req.url)
+      if (!replaceUrl.startsWith('http://') && !replaceUrl.startsWith('https://')) {
+        replaceUrl = 'http://' + replaceUrl
+      }
+      var sender = send(replaceUrl, req.method, header, globalProp.body)
+      sender.request.then(resp => {
+        var httpDetail = {
+          url: resp.config.url,
+          method: resp.config.method.toUpperCase(),
+          headers: resp.config.headers,
+          data: resp.config.data,
+          response: resp.data
+        }
+        console.log(httpDetail)
+        result.httpDetail = httpDetail
+        result.result = resp.statusText
+        results.push(result)
+        this.result = JSON.stringify(results, null, 4)
+        setTimeout(() => {
+          this.runRequest(iterator, results, isContinue)
+        }, 500)
+      }).catch(error => {
+        var resp = error.response
+        var httpDetail = {
+          url: error.config.url,
+          method: error.config.method.toUpperCase(),
+          headers: error.config.headers,
+          data: error.config.data,
+          response: resp
+        }
+        console.log(httpDetail)
+        result.httpDetail = httpDetail
+        result.result = error.name
+        results.push(result)
+        this.result = JSON.stringify(results, null, 4)
+      })
     },
     removeWorkflow (node) {
       Wf.removeWorkflow(node.uuid).then(resp => {

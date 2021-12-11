@@ -81,15 +81,22 @@
                 <div class="text-h6">{{createType}}</div>
               </q-card-section>
               <q-card-section class="q-pt-none">
-                <q-input label="Name" v-model="projectName"></q-input>
-                <q-input label="Desc" v-model="projectDesc"></q-input>
+                <q-input v-if="createType === 'Import Project(Swagger)' || createType === 'New Project'" label="Name" v-model="projectName"></q-input>
+                <q-input v-if="createType === 'Import Project(Swagger)' || createType === 'New Project'" label="Desc" v-model="projectDesc"></q-input>
                 <q-input v-if="createType === 'Import Project(Swagger)'" label="Url" v-model="importUrl"></q-input>
                 <q-input
+                  v-if="createType === 'Import Project(Swagger)' || createType === 'New Project'"
                   v-model="defaultScript"
                   filled
                   type="textarea"
                   label="Default Script"
                 />
+                <q-file v-if="createType === 'Import Config(File)'" label="File" accept=".json" v-model="importConfigFile">
+                  <template v-slot:prepend>
+                    <q-icon name="attach_file" />
+                  </template>
+                </q-file>
+                <q-input v-if="createType === 'Export Config(json)'" label="File Name" v-model="fileName"></q-input>
               </q-card-section>
               <q-card-actions align="right" class="bg-white text-teal">
                 <q-btn flat label="Confirm" @click="confirmCP" v-close-popup/>
@@ -220,12 +227,15 @@
 
 <script>
 import { debounce, exportFile } from 'quasar'
+import { fileUtils } from 'src/utils/loadFile'
 import { Opt, getAllInfo, getRequest } from 'src/utils/opt'
+import { Wf } from 'src/utils/workflow'
 import env from 'src/components/env.vue'
 import axios from 'axios'
 import Workflow from 'src/components/workflow.vue'
 import mdview from 'src/components/markdown.vue'
 import { toMd } from 'src/utils/trans'
+import { StringUtils } from 'src/utils/stringUtils'
 export default {
   components: { env, Workflow, mdview },
   name: 'MainLayout',
@@ -243,7 +253,9 @@ export default {
       mdsrc: '/httpproxy/md/index',
       createProjectOpt: [
         'New Project',
-        'Import Project(Swagger)'
+        'Import Project(Swagger)',
+        'Import Config(File)',
+        'Export Config(json)'
       ],
       pndl: false,
       showMD: false,
@@ -253,6 +265,8 @@ export default {
       projectName: '',
       projectDesc: '',
       importUrl: '',
+      importConfigFile: undefined,
+      fileName: '',
       defaultScript: 'function run_before_send(argument) {\n  // body...\n  setHeader("Content-Type", "application/json")\n}\nrun_before_send()',
       mdUrl: '',
       ai: {},
@@ -297,10 +311,14 @@ export default {
     this.closeWindow = debounce(this.closeWindow, 700)
     this.$root.$on('synCEnv', this.syncEnvCallback)
     window.exportFile = exportFile
+    window.fileUtils = fileUtils
   },
   methods: {
     syncEnvCallback (envMap) {
       this.envProp = envMap
+    },
+    syncImport () {
+      this.$root.$emit('importEnv')
     },
     confirmCP () {
       var promis
@@ -311,6 +329,25 @@ export default {
         case 'Import Project(Swagger)':
           promis = Opt.importFormattedModel(this.projectName, this.projectDesc, this.importUrl, this.defaultScript)
           break
+        case 'Import Config(File)':
+          promis = this.importConfig()
+          break
+        case 'Export Config(json)':
+          var allInfo = Opt.getAllInfo()
+          var projectList = allInfo.projectList
+          var envList = allInfo.envList
+          var workflowList = Wf.getWorkflow().workflowList
+          var fileName = StringUtils.defaultIfBlank(this.fileName, 'all_config')
+          if (!fileName.endsWith('.json')) {
+            fileName += '.json'
+          }
+          exportFile(fileName, JSON.stringify({
+            projectList,
+            envList,
+            workflowList
+          }))
+          this.pndl = false
+          return
       }
       promis.then(resp => {
         if (resp === 'succeed') {
@@ -325,6 +362,75 @@ export default {
         }
       })
       this.pndl = false
+    },
+    importConfig () {
+      if (this.importConfigFile !== undefined) {
+        this.importConfigFile.text().then(data => {
+          var configInfo = JSON.parse(data)
+          var projectList = configInfo.projectList
+          var envList = configInfo.envList
+          var workflowList = configInfo.workflowList
+          if (projectList !== undefined && projectList.length > 0) {
+            projectList.forEach(importProject => {
+              var duplicatedProject = Opt.getAllInfo().projectList.find(localProject => localProject.name === importProject.name || localProject.uuid === importProject.uuid)
+              if (duplicatedProject === undefined) {
+                Opt.getAllInfo().projectList.push(importProject)
+              } else {
+                var msg = 'Import ' + importProject.name + ' failed, Reason: porject name or uuid already existed'
+                console.log(msg)
+                this.$q.notify({
+                  type: 'negative',
+                  message: msg,
+                  position: 'top',
+                  timeout: 1500
+                })
+              }
+            })
+          }
+          if (envList !== undefined && envList.length > 0) {
+            envList.forEach(importEnv => {
+              var duplicatedEnv = Opt.getAllInfo().envList.find(localEnv => localEnv.name === importEnv.name || localEnv.uuid === importEnv.uuid)
+              if (duplicatedEnv === undefined) {
+                Opt.getAllInfo().envList.push(importEnv)
+              } else {
+                var msg = 'Import ' + importEnv.name + ' failed, Reason: env name or uuid already existed'
+                console.log(msg)
+                this.$q.notify({
+                  type: 'negative',
+                  message: msg,
+                  position: 'top',
+                  timeout: 1500
+                })
+              }
+            })
+            Opt.save()
+            this.syncImport()
+          }
+          if (workflowList !== undefined && workflowList.length > 0) {
+            workflowList.forEach(importWorkflow => {
+              var duplicatedWorkflow = Wf.getWorkflow().workflowList.find(localWorkflow => localWorkflow.name === importWorkflow.name || localWorkflow.uuid === importWorkflow.uuid)
+              if (duplicatedWorkflow === undefined) {
+                Wf.getWorkflow().workflowList.push(importWorkflow)
+              } else {
+                var msg = 'Import ' + importWorkflow.name + ' failed, Reason: workflow name or uuid already existed'
+                console.log(msg)
+                this.$q.notify({
+                  type: 'negative',
+                  message: msg,
+                  position: 'top',
+                  timeout: 1500
+                })
+              }
+            })
+            Wf.save()
+          }
+          this.refreshTree()
+          this.importConfigFile = undefined
+        })
+      }
+      return new Promise((resolve, reject) => {
+        resolve('succeed')
+      })
     },
     downloadMd () {
       axios.get(this.mdUrl).then(resp => {

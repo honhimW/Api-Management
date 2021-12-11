@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { deepClone } from './deepClone'
 import { trans, buildExample } from './trans'
+import { getUUID } from './stringUtils'
 
 export const save = () => {
   if (window.configStorage !== undefined) {
@@ -732,10 +733,6 @@ export const importFormattedModel = (name, desc, url, script) => {
       return 'failed'
     }
   })
-}
-
-export const getUUID = () => {
-  return Math.random().toString(16).substring(2) + '-' + Math.random().toString(16).substring(2)
 }
 
 export const Opt = {

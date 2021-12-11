@@ -1,4 +1,4 @@
-
+import { uid } from 'quasar'
 const defaultIfBlank = (str, def) => {
   return isBlank(str) ? def : str
 }
@@ -15,7 +15,7 @@ const isBlank = (str) => {
 }
 
 export const getUUID = () => {
-  return Math.random().toString(16).substring(2) + '-' + Math.random().toString(16).substring(2)
+  return uid()
 }
 
 export const StringUtils = {
