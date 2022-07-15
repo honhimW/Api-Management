@@ -234,7 +234,8 @@ import env from 'src/components/env.vue'
 import axios from 'axios'
 import Workflow from 'src/components/workflow.vue'
 import mdview from 'src/components/markdown.vue'
-import { toMd } from 'src/utils/trans'
+import { swagger2toMd, swagger2trans } from 'src/utils/trans'
+import { openAPI3toMd, openAPI3trans } from 'src/utils/transOpenAPI'
 import { StringUtils } from 'src/utils/stringUtils'
 export default {
   components: { env, Workflow, mdview },
@@ -247,6 +248,8 @@ export default {
     }
     this.isDark = theme
     this.toCus(getAllInfo().projectList)
+    window.swagger2trans = swagger2trans
+    window.openAPI3trans = openAPI3trans
   },
   data () {
     return {
@@ -434,7 +437,12 @@ export default {
     },
     downloadMd () {
       axios.get(this.mdUrl).then(resp => {
-        var mdtxt = toMd(resp.data)
+        var mdtxt
+        if (resp.data.swagger !== undefined) {
+          mdtxt = swagger2toMd(resp.data)
+        } else if (resp.data.openapi !== undefined) {
+          mdtxt = openAPI3toMd(resp.data)
+        }
         var idx = mdtxt.indexOf('\n')
         idx = idx > 17 ? 17 : idx
         var filename
@@ -451,7 +459,11 @@ export default {
       this.showMD = true
       // this.mdsrc = '/httpproxy/md/index?api=' + btoa(this.mdUrl)
       axios.get(this.mdUrl).then(resp => {
-        this.markdownTxt = toMd(resp.data)
+        if (resp.data.swagger !== undefined) {
+          this.markdownTxt = swagger2toMd(resp.data)
+        } else if (resp.data.openapi !== undefined) {
+          this.markdownTxt = openAPI3toMd(resp.data)
+        }
       })
     },
     createProject (item) {

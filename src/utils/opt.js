@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { deepClone } from './deepClone'
-import { trans, buildExample } from './trans'
+import { swagger2trans, buildExample } from './trans'
 import { getUUID } from './stringUtils'
 
 export const save = () => {
@@ -695,7 +695,7 @@ export const importFormattedModel = (name, desc, url, script) => {
   }
   return axios.get(url).then(resp => {
     try {
-      model = trans(resp.data)
+      model = swagger2trans(resp.data)
       var controllerMap = model.tableMap
       var project = {
         name,

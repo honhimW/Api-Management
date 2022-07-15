@@ -1,9 +1,11 @@
 
-export const toMd = (jsonObj) => {
-  var map = trans(jsonObj)
+export const swagger2toMd = (jsonObj) => {
+  var map = swagger2trans(jsonObj)
   var controllerMap = map.tableMap
   var sb = ''
   sb += '# ' + map.info.title + '\n\n'
+  sb += '> base path: ' + map.basePath + '\n\n'
+  sb += '---\n\n'
   var i = 1
   Object.keys(controllerMap).forEach(key => {
     var j = 1
@@ -32,7 +34,7 @@ export const toMd = (jsonObj) => {
   return sb
 }
 
-export const trans = (jsonObj) => {
+export const swagger2trans = (jsonObj) => {
   // var jsonObj = JSON.parse(jsontxt)
   var attrs = parseDefinitions(jsonObj)
 
@@ -95,6 +97,7 @@ export const trans = (jsonObj) => {
   var tableMap = groupingBy(result, 'title')
   resultMap.tableMap = tableMap
   resultMap.info = jsonObj.info
+  resultMap.basePath = jsonObj.basePath
   return resultMap
 }
 
@@ -108,12 +111,12 @@ const parseDefinitions = (origin) => {
   }
   return attrs
 }
-
+const DEFINITIONS_PREFIX = '#/definitions/'
 const fillModel = (defObj, attrs, modeName) => {
-  var attr = attrs['#/definitions/' + modeName]
+  var attr = attrs[DEFINITIONS_PREFIX + modeName]
   if (attr === undefined) {
     attr = {}
-    attrs['#/definitions/' + modeName] = attr
+    attrs[DEFINITIONS_PREFIX + modeName] = attr
   } else if (attr.isCompleted) {
     return attr
   }
@@ -137,7 +140,7 @@ const fillModel = (defObj, attrs, modeName) => {
     var ref = attrInfo.$ref
     var items = attrInfo.items
     if (ref !== undefined || (items !== undefined && (ref = items.$ref) !== undefined)) {
-      var clzName = ref.substring(14)
+      var clzName = ref.substring(DEFINITIONS_PREFIX.length)
       var refModel = fillModel(defObj, attrs, clzName)
       if (refModel !== undefined) {
         child.properties = refModel.properties
@@ -186,7 +189,7 @@ const processRequestList = (parameters, attrs) => {
           request.type = 'array'
         }
         if (ref !== undefined) {
-          request.type = request.type + ':' + ref.replaceAll('#/definitions/', '')
+          request.type = request.type + ':' + ref.replaceAll(DEFINITIONS_PREFIX, '')
           request.modelAttr = attrs[ref]
         }
       }
